@@ -1,0 +1,275 @@
+---
+title: 'R and APIs'
+subtitle: 'DCR'
+author: 'Marck Vaisman<br/>@wahalulu'
+date: 'November 8, 2019'
+output:
+  ioslides_presentation:
+    incremental: true
+    widescreen: true
+    css: jd-custom.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE)
+```
+
+# Disclaimer
+
+# Primer on APIs
+
+## What is an API?
+
+### API: Application Programming Interface
+
+APIs allow software programs to communicate with each other. One program can call another program’s API to get access to data or functionality of the other program.
+
+An API is an interface exposed by some software. It's an abstraction of the underlying implementation (code, architecture, etc.)
+
+
+## Types of APIs
+
+* Open APIs
+* Partner APIs
+* Internal APIs
+* Composite APIs
+
+## Web (Remote) APIs - our focus today
+
+* Communicate over the Internet
+* Many are open, many require authentication
+* HTTP protocol
+* REST architecture
+
+## RESTful APIs - the vast majority
+
+REST: Representational State Transfer
+
+* Client/server separation:
+* Statelessness 
+* Cacheability
+* Layered system
+* Code on demand
+* Uniform interface.
+
+## {data-background=images/rest-api-basics.png}
+
+## {data-background=images/http-method.png}
+
+## {data-background=images/rest-api-call.png}
+
+## {data-background=images/rest-call-anatomy.png}
+
+## {data-background=images/JSONSample.jpg}
+
+## {data-background=images/wahalulu-github-1.png}
+
+## Open GET call with curl {.vsmall-code}
+
+```
+(base) ➜  ~ curl https://api.github.com/users/wahalulu
+{
+  "login": "wahalulu",
+  "id": 250055,
+  "node_id": "MDQ6VXNlcjI1MDA1NQ==",
+  "avatar_url": "https://avatars2.githubusercontent.com/u/250055?v=4",
+  "gravatar_id": "",
+  ...
+  "name": "Marck Vaisman",
+  "company": "@Microsoft ",
+  "blog": "",
+  "location": "Washington, DC",
+  "email": null,
+  "hireable": null,
+  "bio": "Data & AI Specialist at Microsoft. Data Scientist, master munger. R Programmer & Advocate. Professor at Georgetown and GWU. Co-Founder @datacommunitydc ",
+  ...
+}
+```
+## Open GET with curl and headers {.vsmall-code}
+
+```
+(base) ➜  ~ curl -i https://api.github.com/users/wahalulu
+HTTP/1.1 200 OK
+Date: Thu, 07 Nov 2019 20:19:02 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 1443
+...
+X-GitHub-Request-Id: C701:1411F:10AE3439:140673AE:5DC47C36
+
+{
+  "login": "wahalulu",
+  "id": 250055,
+  ...
+  "created_at": "2010-04-22T17:34:29Z",
+  "updated_at": "2019-10-28T20:34:56Z"
+}
+```
+
+## {data-background=images/popular-mechanics-404.png}
+
+## Authenticated POST  {.vsmall-code}
+
+```
+(base) ➜  ~ curl -X POST -u wahalulu:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
+https://api.github.com/user/repos -d "{\"name\":\"dcr-repo-created-by-curl\"}"
+{
+  "id": 220453725,
+  "node_id": "MDEwOlJlcG9zaXRvcnkyMjA0NTM3MjU=",
+  "name": "dcr-repo-created-by-curl",
+  "full_name": "wahalulu/dcr-repo-created-by-curl",
+  "private": false,
+  "owner": {
+    "login": "wahalulu",
+    "id": 250055,
+    ...
+  },
+  "html_url": "https://github.com/wahalulu/dcr-repo-created-by-curl",
+  "description": null,
+...
+}
+```
+## {data-background=images/wahalulu-github-2.png}
+
+
+# R and APIs
+
+## R Packages for working with APIs
+
+### httr
+
+Useful tools for working with HTTP organised by HTTP verbs (GET(), POST(), etc). Configuration functions make it easy to control additional request components (authenticate(), add_headers() and so on).
+
+### curl
+
+The curl package provides bindings to the libcurl C library for R. The package supports retrieving data in-memory, downloading to disk, or streaming using the R “connection” interface. Some knowledge of curl is recommended to use this package. **For a more user-friendly HTTP client, have a look at the httr package which builds on curl with HTTP specific tools and logic.**
+
+### jsonlite
+
+A fast JSON parser and generator optimized for statistical data and the web. 
+
+## RCurl is outdated
+
+<div align="center">
+<img src="images/jeron-ooms-twitter-curl-rcurl.png" width=500>
+</div>
+
+
+## httr call {.vsmall-code}
+
+### command line curl
+```
+(base) ➜  ~ curl -X POST -u wahalulu:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
+https://api.github.com/user/repos -d "{\"name\":\"dcr-repo-created-by-curl\"}"
+```
+
+### httr
+```r
+endpoint <- "https://api.github.com/user/repos"
+user <- "wahalulu"
+personal_token <- "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+body_httr <- list(name = "dcr-repo-created-by-httr")
+
+create_repo <- POST(endpoint, 
+                    authenticate(user, personal_token),
+                    body = body_httr,
+                    encode = "json")
+```
+## httr response {.vsmall-code}
+
+```
+> create_repo$status_code
+[1] 201
+> create_repo$content
+   [1] 7b 0a 20 20 22 69 64 22 3a 20 32 32 30 34 39 38 39 31 39 2c 0a 20 20 22 6e 6f 64 65 5f
+  [30] 69 64 22 3a 20 22 4d 44 45 77 4f 6c 4a 6c 63 47 39 7a 61 58 52 76 63 6e 6b 79 4d 6a 41
+
+# raw json
+content(create_repo, "text")
+
+# [1] "{\n  \"id\": 220498919,\n  \"node_id\": \"MDEwOlJlcG9zaXRvcnkyMjA0OTg5MTk=\",\n
+# \"name\": \"dcr-repo-created-by-httr\",\n  \"full_name\":
+# \"wahalulu/dcr-repo-created-by-httr\",\n  \"private\": false,\n  \"owner\": {\n
+
+# list
+content(create_repo)
+$id
+[1] 220498919
+```
+
+## {data-background=images/wahalulu-github-3.png}
+
+## {data-background=images/burns.png}
+
+## ugly
+
+```r
+extract_result_dataframe <- function(l) {
+  if(!is.list(l)) stop("Object must be a list of responses!")
+  df_list <- lapply(l, function(x) {
+    if(identical(fromJSON(content(x, "text"))$results, list())) {
+      NULL
+    } else {
+      flatten(fromJSON(content(x, "text"))$results)
+    }
+  })
+  bind_rows(df_list)
+}
+```
+
+## elegant
+
+```r
+get_members <- function(urlname, api_key = NULL){
+  api_method <- paste0(urlname, "/members/")
+  res <- .fetch_results(api_method, api_key)
+  tibble::tibble(
+    id = purrr::map_int(res, "id"),
+    name = purrr::map_chr(res, "name", .default = NA),
+    bio = purrr::map_chr(res, "bio", .default = NA),
+    status = purrr::map_chr(res, "status"),
+    joined = .date_helper(purrr::map_dbl(res, "joined")),
+    city = purrr::map_chr(res, "city", .default = NA),
+    country = purrr::map_chr(res, "country", .default = NA),
+    state = purrr::map_chr(res, "state", .default = NA),
+    lat = purrr::map_dbl(res, "lat", .default = NA),
+    lon = purrr::map_dbl(res, "lon", .default = NA),
+    photo_link = purrr::map_chr(res, c("photo", "photo_link"), .default = NA),
+    resource = res
+  )
+}
+```
+
+
+# Managing your cloud
+
+## {data-background=images/azure-portal.png}
+
+## Programatically
+
+* Command Line Tools (usually wrapper around API)
+* SDKs/Libraries (usually wrapper around API, and may not be availble in R) 
+* REST APIs
+
+## {data-background=images/cloudyr.png}
+
+## {data-background=images/azurer.png}
+
+## {data-background=images/azurer-first.png}
+
+## {data-background=images/azurer-second.png}
+
+## {data-background=images/r-dev-guide.png}
+
+## {data-background=images/thats-all-folks.png}
+
+
+
+
+
+
+
+
+
+
+

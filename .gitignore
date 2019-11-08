@@ -1,0 +1,8 @@
+.httr-oauth
+support/
+.Rproj.user
+.Rhistory
+code/
+.DS_Store
+*.Rproj
+
