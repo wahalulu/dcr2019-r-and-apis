@@ -54,13 +54,23 @@ REST: Representational State Transfer
 
 ## {data-background=images/rest-api-basics.png}
 
+Figure from the book _The Design of Everyday APIs_ by Arnand Lauret, 2019, Manning
+
 ## {data-background=images/http-method.png}
+
+Figure from the book _The Design of Everyday APIs_ by Arnand Lauret, 2019, Manning
 
 ## {data-background=images/rest-api-call.png}
 
+Figure from the book _The Design of Everyday APIs_ by Arnand Lauret, 2019, Manning
+
 ## {data-background=images/rest-call-anatomy.png}
 
+Figure source: https://www.slideshare.net/sharepointbits/understanding-and-programming-the-sharepoint-rest-api
+
 ## {data-background=images/JSONSample.jpg}
+
+Figure source: https://www.slideshare.net/sharepointbits/understanding-and-programming-the-sharepoint-rest-api
 
 ## {data-background=images/wahalulu-github-1.png}
 
@@ -204,6 +214,7 @@ $id
 ## ugly
 
 ```r
+# Code from Marck Vaisman's meetupr package circa 2014: https://github.com/wahalulu/meetupr
 extract_result_dataframe <- function(l) {
   if(!is.list(l)) stop("Object must be a list of responses!")
   df_list <- lapply(l, function(x) {
@@ -220,6 +231,7 @@ extract_result_dataframe <- function(l) {
 ## elegant
 
 ```r
+# Code from RLadies meetupr package 2019: https://github.com/rladies/meetupr
 get_members <- function(urlname, api_key = NULL){
   api_method <- paste0(urlname, "/members/")
   res <- .fetch_results(api_method, api_key)
